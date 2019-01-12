@@ -2,10 +2,12 @@ package cc.mikaka.jetcd.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cc.mikaka.jetcd.commons.Result;
@@ -27,15 +29,9 @@ public class EtcdController {
         return Result.ok(etcdService.addKey(vo.getKey(), vo.getValue()));
     }
 
-    @ApiOperation("修改Key")
-    @PutMapping
-    public Result<Object> editKey(@RequestBody KvVO vo) {
-        return Result.ok(etcdService.addKey(vo.getKey(), vo.getValue()));
-    }
-
     @ApiOperation("获取Key")
-    @PutMapping("/get")
-    public Result<Object> getKey(@RequestBody KvVO vo) {
-        return Result.ok(etcdService.getKey(vo.getKey()));
+    @GetMapping
+    public Result<Object> getKey(@RequestParam String key) {
+        return Result.ok(etcdService.getKey(key));
     }
 }

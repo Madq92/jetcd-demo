@@ -1,12 +1,13 @@
 package cc.mikaka.jetcd;
 
 
-import com.coreos.jetcd.Auth;
+import com.alibaba.fastjson.JSON;
 import com.coreos.jetcd.Client;
+import com.coreos.jetcd.Cluster;
 import com.coreos.jetcd.KV;
 import com.coreos.jetcd.Maintenance;
 import com.coreos.jetcd.Watch;
-import com.coreos.jetcd.auth.AuthUserListResponse;
+import com.coreos.jetcd.cluster.MemberListResponse;
 import com.coreos.jetcd.data.ByteSequence;
 import com.coreos.jetcd.data.KeyValue;
 import com.coreos.jetcd.kv.GetResponse;
@@ -28,10 +29,15 @@ public class EtcdWatch {
                 .lazyInitialization(false)
                 .build();
 
+        Cluster clusterClient = client.getClusterClient();
+        MemberListResponse memberListResponse = clusterClient.listMember().get();
+        print(memberListResponse.getMembers(), JSON::toJSONString);
+
+
         Maintenance maintenanceClient = client.getMaintenanceClient();
         AlarmResponse alarmResponse = maintenanceClient.listAlarms().get();
         List<AlarmMember> alarms = alarmResponse.getAlarms();
-        print(alarms, EtcdWatch::alarms2String);
+        print(alarms, JSON::toJSONString);
 
 
         KV kvClient = client.getKVClient();
@@ -55,15 +61,15 @@ public class EtcdWatch {
         System.err.println("over");
     }
 
-    public static <T> void print(List<T> list, Function<? super T, ? super String> function) {
+    private static <T> void print(List<T> list, Function<? super T, ? super String> function) {
         if (null != list && list.size() != 0) {
-            list.stream().forEach(o -> System.err.println(function.apply(o)));
+            list.forEach(o -> System.err.println(function.apply(o)));
         } else {
             System.err.println("---null---");
         }
     }
 
-    public static String event2String(WatchEvent event) {
+    private static String event2String(WatchEvent event) {
         StringBuffer sb = new StringBuffer();
         sb.append("eventType = ").append(event.getEventType()).append(System.getProperty("line.separator"));
         sb.append("kv = ").append(kv2String(event.getKeyValue())).append(System.getProperty("line.separator"));
@@ -71,12 +77,7 @@ public class EtcdWatch {
         return sb.toString();
     }
 
-    public static String kv2String(KeyValue keyValue) {
+    private static String kv2String(KeyValue keyValue) {
         return "key:" + keyValue.getKey().toStringUtf8() + ";" + "value:" + keyValue.getValue().toStringUtf8();
     }
-
-    public static String alarms2String(AlarmMember alarmMember) {
-        return "alarmType:" + alarmMember.getAlarmType() + ";" + "memberId:" + alarmMember.getMemberId();
-    }
-
 }
